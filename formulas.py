@@ -29,8 +29,13 @@ class CantileverEndLoad():
         self.EI = E * I
     
     def markdown(self):
-        md = """Deflection = ${F \cdot x^2 \over 6EI} \cdot (3L-x)$  
-        Slope = 
+        md = """
+        |  |  |
+        | :--- | --- |
+        | Deflection | $ \delta = {Fx^2 \over 6EI} \cdot (3L-x)$ |
+        | Slope | $\\theta = -{Fx \over 2EI} \cdot (2L-x)$ |
+        | Shear | $V = +F$ |
+        | Moment | $M = -F(L)$ |
         """
         return md
     
