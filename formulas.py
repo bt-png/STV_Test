@@ -1,4 +1,14 @@
 import numpy as np
+from datetime import datetime
+
+def check_validity(self, expireDate):
+    """Disable calculation if date has passed
+    
+    If the calculations are dependent on a code that is frequently changed,
+    prevent the results to be shown until the code is updated.
+    """
+    if datetime.today() > expireDate:
+        raise Exception(f'This calculation set has expired and requires updating. Please notify your discipline lead. Error:[{self}]')
 
 
 class CantileverEndLoad():
@@ -8,7 +18,9 @@ class CantileverEndLoad():
     Fixed at the left and free to the right
     Calculations from Gere, Lindeburg, and Shigley
     """
+    
     def __init__(self, F, L, E, I):
+        check_validity(self, datetime(year=2024, month=6, day=1))
         self.F = F
         self.L = L
         self.EI = E * I
@@ -43,6 +55,7 @@ class CantileverIntermediateLoad():
     Calculations from Gere, Lindeburg, and Shigley
     """
     def __init__(self, F, L, E, I, a):
+        check_validity(self, datetime(year=2024, month=6, day=1))
         self.F = F
         self.L = L
         self.EI = E * I
