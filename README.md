@@ -7,8 +7,8 @@ Two ways to develop depending on your local computer access (Local or WebBased):
 Utilize Visual Code, PyCharm, or other IDE for Python 3.  
 Clone the 'dev' branch to your local file system and setup a new virtual environment  
 * One way to setup a new virtual environment is through the command prompt. Open the command prompt and invoke as follows:  
-* C:\>python -m venv C:\GitRepo\STV_Test-dev  
-Install package requirements to your new local environment through 'pip install -r requirements.txt'  
+* ```C:\>python -m venv C:\GitRepo\STV_Test-dev```  
+Install package requirements to your new local environment through ```pip install -r requirements.txt```  
 To render the website for use during testing, utilize the terminal command ```streamlit run main.py```  
  
 ## WebBased Development
