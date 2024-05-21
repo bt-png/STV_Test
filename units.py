@@ -135,6 +135,19 @@ def unitdisplay(val, minor=False):
                     + ' | ' +
                     '{:.3f~P}'.format(val.to(ureg.Unit('kN')))
                     )
+        case '[length]**2*[mass]/[time]**2':  # Force*Length
+            if minor:
+                return (
+                    '{:.2f~P}'.format(val.to(ureg.Unit('lbf*in')))
+                    + ' | ' +
+                    '{:.2f~P}'.format(val.to(ureg.Unit('N*mm')))
+                    )
+            else:
+                return (
+                    '{:.3f~P}'.format(val.to(ureg.Unit('kip*ft')))
+                    + ' | ' +
+                    '{:.3f~P}'.format(val.to(ureg.Unit('kN*m')))
+                    )
         case '[mass]/[time]**2':  # Force / Length
             if minor:
                 return (

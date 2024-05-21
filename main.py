@@ -30,7 +30,7 @@ def run():
     beam = formulas.CantileverIntermediateLoad(load, length, modulus, inertia, distance)
     x = np.linspace((0*length).to_base_units(), length.to_base_units(), num=100, endpoint=True)
     st.markdown(beam.markdown())
-    
+
     st.markdown('---')
     deflection = [beam.deflection(_x).to_base_units() for _x in x]
     plot('Beam Deflection', 'x', 'y', x, deflection, False, True)
@@ -47,9 +47,9 @@ def run():
 
     st.markdown('---')
     moment = [beam.moment(_x).to_base_units() for _x in x]
-    plot('Beam Moment', 'x', 'y', x, moment, False, True)
+    plot('Beam Moment', 'x', 'y', x, moment, False, False)
     maxmoment = beam.maxMoment()
-    st.caption(f'Maximum Moment = {units.unitdisplay(maxmoment, minor=True)}')
+    st.caption(f'Maximum Moment = {units.unitdisplay(maxmoment)}')
 
 
 # Don't revise. Changes to your calculation title and instructions should be made within the 'information.md' file.
