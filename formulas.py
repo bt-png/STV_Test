@@ -1,3 +1,4 @@
+import streamlit as st
 import numpy as np
 from datetime import datetime
 
@@ -8,7 +9,9 @@ def check_validity(self, expireDate):
     prevent the results to be shown until the code is updated.
     """
     if datetime.today() > expireDate:
-        raise Exception(f'This calculation set has expired and requires updating. Please notify your discipline lead. Error:[{self}]')
+        st.error('This calculation set has expired and requires updating')
+        st.warning('Please notify your discipline lead.')
+        #raise Exception(f'[{self}]')
 
 
 class CantileverEndLoad():
@@ -24,6 +27,12 @@ class CantileverEndLoad():
         self.F = F
         self.L = L
         self.EI = E * I
+    
+    def markdown(self):
+        md = """Deflection = ${F \cdot x^2 \over 6EI} \cdot (3L-x)$  
+        Slope = 
+        """
+        return md
     
     def deflection(self, x):
         return -((self.F * x**2)/(6 * self.EI)) * (3 * self.L - x)
@@ -52,7 +61,7 @@ class CantileverIntermediateLoad():
 
     Cantilever beam with Intermediate Loading
     Fixed at the left and free to the right
-    Calculations from Gere, Lindeburg, and Shigley
+    Calculations common to Gere, Lindeburg, and Shigley
     """
     def __init__(self, F, L, E, I, a):
         check_validity(self, datetime(year=2024, month=6, day=1))
@@ -62,6 +71,21 @@ class CantileverIntermediateLoad():
         self.a = a
         self._x = np.linspace((0*self.L).to_base_units(), self.L.to_base_units(), num=100, endpoint=True)
     
+    def markdown(self):
+        md = """
+        |  |  | |
+        | :--- | --- | --- |
+        | Deflection | $ \delta = {Fx^2 \over 6EI} \cdot (3a-x)$ | $(0 \leq x \leq a)$ |
+        | | $ \delta = {Fa^2 \over 6EI} \cdot (3x-a)$ | $(a \leq x \leq L)$ |
+        | Slope | $\\theta = -{Fx \over 2EI} \cdot (2a-x)$ | $(0 \leq x \leq a)$ |
+        | | $\\theta = -{Fa^2 \over 2EI}$ | $(a \leq x \leq L)$ |
+        | Shear | $V = +F$ | $(0 \leq x \leq a)$ |
+        | | $V = 0$ | $(a \leq x \leq L)$ |
+        | Moment | $M = -F(a-x)$ | $(0 \leq x \leq a)$ |
+        | | $M = 0$ | $(a \leq x \leq L)$ |
+        """
+        return md
+
     def return_max(self, _list):
         _min = min(_list)
         _max = max(_list)

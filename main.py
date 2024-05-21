@@ -29,6 +29,7 @@ def run():
     st.markdown('### Results')
     beam = formulas.CantileverIntermediateLoad(load, length, modulus, inertia, distance)
     x = np.linspace((0*length).to_base_units(), length.to_base_units(), num=100, endpoint=True)
+    st.markdown(beam.markdown())
     
     st.markdown('---')
     deflection = [beam.deflection(_x).to_base_units() for _x in x]
