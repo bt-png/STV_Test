@@ -1,6 +1,7 @@
 import streamlit as st
+import pandas as pd
 from pint import UnitRegistry
-
+import xarray as xr
 
 ureg = UnitRegistry()
 # ureg.autoconvert_to_preferred = True
@@ -16,7 +17,7 @@ def get_UnitRegistry():
 
 def load(str):
     """Returns a quantity value with magnitude and unit.
-    
+
     This function takes in a string formatted unit and converts it
     to a quantity value with base units, enabling conversion.
     Available string inputs include '3 feet', '12.25 lbf', '3.4*10^3 Nm', ...etc
@@ -105,9 +106,9 @@ def unitdisplay(val, minor=False):
                     )
             else:
                 return (
-                    '{:.3f~P}'.format(val.to(ureg.Unit('mile_per_hour')))
+                    '{:.3f~P}'.format(val.to(ureg.Unit('mph')))
                     + ' | ' +
-                    '{:.3f~P}'.format(val.to(ureg.Unit('kilometer_per_hour')))
+                    '{:.3f~P}'.format(val.to(ureg.Unit('kph')))
                     )
         case '[mass]/[length]':  # Mass / Length
             if minor:
@@ -190,11 +191,11 @@ def unitdisplay(val, minor=False):
         case '':  # Dimensionless
             return val
         case _:
-            return val.dimensionality
+            return val
 
 
 def availableUnits(val):
-    match val:
+    match val.dimensionality:
         case '[length]':
             return ('foot', 'inch', 'meter', 'mm')
         case '[temperature]':
@@ -206,7 +207,7 @@ def availableUnits(val):
         case '[length]**4':
             return ('foot**4', 'inch**4', 'meter**4', 'mm**4')
         case '[length]/[time]':
-            return ('mile_per_hour', 'fts', 'kph', 'mps')
+            return ('mph', 'ft/s', 'kph', 'm/s')
         case '[mass]/[length]':
             return ('pound/foot', 'pound/inch', 'kilogram/meter', 'kilogram/mm')
         case '[length]*[mass]/[time]**2':
@@ -220,10 +221,10 @@ def availableUnits(val):
         case '':
             pass
         case _:
-            pass
+            return (str(val.units), ' ')
 
 
-def input(label, default, minor=False):
+def input(label: str, default: str | UnitRegistry.Quantity, minor: bool = False) -> UnitRegistry.Quantity:
     """Returns a quantity value from a user input field.
 
     This function creates a streamlit number input field to update the quantity. The unit of measure is
@@ -235,22 +236,65 @@ def input(label, default, minor=False):
     col1, col2, col21, col3 = st.columns([2, 3, 2, 3])
     col1.write('<div style="text-align:right">'+label+'</div>', unsafe_allow_html=True)
 
-    if type(default) == str:
+    if type(default) is str:
         _default = load(default)
     else:
         _default = default
-    magnitude = col2.number_input(label=label, label_visibility='collapsed', value=_default.magnitude)
+    try:
+        magnitude = col2.number_input(label=label, label_visibility='collapsed', value=_default.magnitude)
+    except Exception:
+        pass
+
     if _default.dimensionality == '':
         unittype = _default.units
     else:
         try:
-            idx = availableUnits(_default.dimensionality).index(_default.units)
+            idx = availableUnits(_default).index(_default.units)
         except Exception:
-            col2.warning(f'{_default.dimensionality}, {_default.units}')
-            raise Exception
+            idx = 0
         unittype = col21.selectbox(
-            label=label, label_visibility='collapsed', options=availableUnits(_default.dimensionality), index=idx
+            label=label, label_visibility='collapsed', options=availableUnits(_default), index=idx
             )
     val = ureg.Quantity(magnitude, unittype)
     col3.caption(unitdisplay(val, minor))
     return val
+
+
+def table_input(
+        label: list | str,
+        default: list | str | UnitRegistry.Quantity,
+        minor: list | bool = False
+        ) -> list | UnitRegistry.Quantity:
+    """Returns a list of quantity values from the user.
+
+    This function creates a streamlit data_editor to receive free values. The unit of measure is
+    set based on the default values units and should be in a list form, matching the length of the 'label' list.  
+    Magnitude or base unit may be changed by the user through the generated drop down and table.  
+    # Example  
+    length, voltage, speed = units.table_input(  
+        label=('label for ft input', 'Voltage', 'Speed'),  
+        default=('1 ft', '1 V', '1 mph'),  
+        minor=(True, False, False)  
+        )  
+
+    # Inputs  
+    label = list of strings (names for each column of the dataframe)  
+    default = quantity | str (set by .load, with the same shape as the label list)  
+    minor = list of boolean (display as major unit (ft/m) or minor unit (in/mm). default=False)
+    """
+
+    _quantity = [load(val) for val in default]
+    _magnitude = [load(val).magnitude for val in default]
+    _cols = st.columns(len(label))
+    _vals = {}
+    for c, lbl, val in zip(_cols, label, _quantity):
+        try:
+            idx = availableUnits(val).index(val.units)
+        except Exception:
+            idx = 0
+        _vals[lbl] = (c.selectbox(lbl, options=availableUnits(val), index=idx))
+    _df_magnitude = pd.DataFrame([_magnitude], columns=label)
+    result = st.data_editor(_df_magnitude, num_rows='dynamic', hide_index=True)
+    _ds = xr.Dataset(result)
+    ds = _ds.pint.quantify(_vals)
+    return [ds[v].data for v in label]
