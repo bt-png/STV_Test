@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 from pint import UnitRegistry
 
 
@@ -17,7 +16,7 @@ def get_UnitRegistry():
 
 def load(str):
     """Returns a quantity value with magnitude and unit.
-
+    
     This function takes in a string formatted unit and converts it
     to a quantity value with base units, enabling conversion.
     Available string inputs include '3 feet', '12.25 lbf', '3.4*10^3 Nm', ...etc
@@ -191,11 +190,11 @@ def unitdisplay(val, minor=False):
         case '':  # Dimensionless
             return val
         case _:
-            return val
+            return val.dimensionality
 
 
 def availableUnits(val):
-    match val.dimensionality:
+    match val:
         case '[length]':
             return ('foot', 'inch', 'meter', 'mm')
         case '[temperature]':
@@ -221,10 +220,10 @@ def availableUnits(val):
         case '':
             pass
         case _:
-            return (str(val.units), ' ')
+            pass
 
 
-def input(label: str, default: str | UnitRegistry.Quantity, minor: bool = False) -> UnitRegistry.Quantity:
+def input(label, default, minor=False):
     """Returns a quantity value from a user input field.
 
     This function creates a streamlit number input field to update the quantity. The unit of measure is
@@ -236,24 +235,21 @@ def input(label: str, default: str | UnitRegistry.Quantity, minor: bool = False)
     col1, col2, col21, col3 = st.columns([2, 3, 2, 3])
     col1.write('<div style="text-align:right">'+label+'</div>', unsafe_allow_html=True)
 
-    if type(default) is str:
+    if type(default) == str:
         _default = load(default)
     else:
         _default = default
-    try:
-        magnitude = col2.number_input(label=label, label_visibility='collapsed', value=_default.magnitude)
-    except Exception:
-        pass
-
+    magnitude = col2.number_input(label=label, label_visibility='collapsed', value=_default.magnitude)
     if _default.dimensionality == '':
         unittype = _default.units
     else:
         try:
-            idx = availableUnits(_default).index(_default.units)
+            idx = availableUnits(_default.dimensionality).index(_default.units)
         except Exception:
-            idx = 0
+            col2.warning(f'{_default.dimensionality}, {_default.units}')
+            raise Exception
         unittype = col21.selectbox(
-            label=label, label_visibility='collapsed', options=availableUnits(_default), index=idx
+            label=label, label_visibility='collapsed', options=availableUnits(_default.dimensionality), index=idx
             )
     val = ureg.Quantity(magnitude, unittype)
     col3.caption(unitdisplay(val, minor))
