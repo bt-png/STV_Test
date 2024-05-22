@@ -4,7 +4,12 @@ import units
 import altair as alt
 
 
-def plot(_title, _xTitle, _yTitle, _xData, _yData, _xMinor=False, _yMinor=False):
+def plot(_title: str, _xTitle: str, _yTitle: str, _xData: list, _yData: list, _xMinor:bool=False, _yMinor:bool=False) -> alt.Chart:
+    """Returns an interactive graph
+
+    The plot title, axis labels, tooltips, and unit display are handled within the function  
+    The major/minor unit display of the _xData list is controlled by the _xMinor boolean.
+    """
     _df = pd.DataFrame({
         'X': [x.to_base_units().magnitude for x in _xData],
         'Y': [y.to_base_units().magnitude for y in _yData]
@@ -26,5 +31,4 @@ def plot(_title, _xTitle, _yTitle, _xData, _yData, _xMinor=False, _yMinor=False)
     text = line.mark_text(align='left', dx=5, dy=-5).encode(text=alt.condition(nearest, str(_yTitle+':N'), alt.value(' ')))
     rules = alt.Chart(_df).mark_rule(color='gray').encode(x='X:Q').transform_filter(nearest)
     chart = alt.layer(line + selectors + points + rules + text).properties(width=800, height=300).configure_axis(grid=False)
-    #st.dataframe(_df)
     st.write(chart)

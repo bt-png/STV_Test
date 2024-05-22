@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from pint import UnitRegistry
 
 
@@ -16,7 +17,7 @@ def get_UnitRegistry():
 
 def load(str):
     """Returns a quantity value with magnitude and unit.
-    
+
     This function takes in a string formatted unit and converts it
     to a quantity value with base units, enabling conversion.
     Available string inputs include '3 feet', '12.25 lbf', '3.4*10^3 Nm', ...etc
@@ -190,11 +191,11 @@ def unitdisplay(val, minor=False):
         case '':  # Dimensionless
             return val
         case _:
-            return val.dimensionality
+            return val
 
 
 def availableUnits(val):
-    match val:
+    match val.dimensionality:
         case '[length]':
             return ('foot', 'inch', 'meter', 'mm')
         case '[temperature]':
@@ -220,10 +221,10 @@ def availableUnits(val):
         case '':
             pass
         case _:
-            pass
+            return (str(val.units), ' ')
 
 
-def input(label, default, minor=False):
+def input(label: str, default: str | UnitRegistry.Quantity, minor: bool = False) -> UnitRegistry.Quantity:
     """Returns a quantity value from a user input field.
 
     This function creates a streamlit number input field to update the quantity. The unit of measure is
@@ -235,22 +236,62 @@ def input(label, default, minor=False):
     col1, col2, col21, col3 = st.columns([2, 3, 2, 3])
     col1.write('<div style="text-align:right">'+label+'</div>', unsafe_allow_html=True)
 
-    if type(default) == str:
+    if type(default) is str:
         _default = load(default)
     else:
         _default = default
-    magnitude = col2.number_input(label=label, label_visibility='collapsed', value=_default.magnitude)
+    try:
+        magnitude = col2.number_input(label=label, label_visibility='collapsed', value=_default.magnitude)
+    except Exception:
+        pass
+
     if _default.dimensionality == '':
         unittype = _default.units
     else:
         try:
-            idx = availableUnits(_default.dimensionality).index(_default.units)
+            idx = availableUnits(_default).index(_default.units)
         except Exception:
-            col2.warning(f'{_default.dimensionality}, {_default.units}')
-            raise Exception
+            idx = 0
         unittype = col21.selectbox(
-            label=label, label_visibility='collapsed', options=availableUnits(_default.dimensionality), index=idx
+            label=label, label_visibility='collapsed', options=availableUnits(_default), index=idx
             )
     val = ureg.Quantity(magnitude, unittype)
     col3.caption(unitdisplay(val, minor))
     return val
+
+
+def table_input(
+        label: list | str,
+        default: list | str | UnitRegistry.Quantity,
+        minor: list | bool = False
+        ) -> pd.DataFrame | UnitRegistry.Quantity:
+    """Returns a dataframe of quantity values from the user.
+
+    This function creates a streamlit data_editor to receive free values. The unit of measure is
+    fixed based on the default values units and should be in a list form, matching the length of the 'label' list.
+    Magnitude or base unit may be changed by the user.  
+    label = list of strings (names for each column of the dataframe)  
+    default = quantity | str (set by .load, with the same shape as the label list)  
+    minor = list of boolean (display as major unit (ft/m) or minor unit (in/mm). default=False)
+    """
+
+    _quantity = [load(val) for val in default]
+    _vals = [load(val).units for val in default]
+    _df_units = pd.DataFrame([_vals], columns=label)
+    cols = st.columns(len(label))
+    vals = []
+    for c, lbl, val in zip(cols, label, _quantity):
+        try:
+            idx = availableUnits(val).index(val.units)
+        except Exception:
+            idx = 0
+        vals.append(c.selectbox(lbl, options=availableUnits(val), index=idx))
+    units = UnitRegistry.Quantity(vals)
+    _df_magnitude = pd.DataFrame([_quantity], columns=label, dtype=units)
+    result = st.data_editor(_df_magnitude, num_rows='dynamic', hide_index=True)
+    st.write(_df_magnitude)
+    #st.write(units.dot(result))
+    st.write(units)
+    st.write(result)
+    st.markdown(result['col1'][0])
+    return result
