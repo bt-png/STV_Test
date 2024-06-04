@@ -213,7 +213,7 @@ def availableUnits(val):
         case '[length]*[mass]/[time]**2':
             return ('force_pound', 'N')
         case '[mass]/[time]**2':
-            return ('lbf_ft', 'lbf_in', 'N_m', 'N_mm')
+            return ('lbf/ft', 'lbf/in', 'N/m', 'N/mm')
         case '[mass]/[length]/[time]**2':
             return ('lbf/ft**2', 'force_pound/inch**2', 'N/m**2', 'N/mm**2')
         case '[mass]/[length]**3':
