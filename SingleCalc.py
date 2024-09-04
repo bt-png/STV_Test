@@ -25,43 +25,30 @@ from plot import plot  # plot.py: No changes to plot.py will be accepted, unless
 # In the ```MultiCalc``` example, these would be contained within their associated class objects within the formulas module.
 def markdown():
     md = """
-    |  |  | |
-    | :--- | --- | --- |
-    | Deflection | $ \delta = {Fx^2 \over 6EI} \cdot (3a-x)$ | $(0 \leq x \leq a)$ |
-    | | $ \delta = {Fa^2 \over 6EI} \cdot (3x-a)$ | $(a \leq x \leq L)$ |
-    | Slope | $\\theta = -{Fx \over 2EI} \cdot (2a-x)$ | $(0 \leq x \leq a)$ |
-    | | $\\theta = -{Fa^2 \over 2EI}$ | $(a \leq x \leq L)$ |
-    | Shear | $V = +F$ | $(0 \leq x \leq a)$ |
-    | | $V = 0$ | $(a \leq x \leq L)$ |
-    | Moment | $M = -F(a-x)$ | $(0 \leq x \leq a)$ |
-    | | $M = 0$ | $(a \leq x \leq L)$ |
+    The formula for voltage at the load is:
+
+    $$V_{\t{load}} = V_{\t{input}} - I \cdot R$$
     """
     return md
 
 
-def calcDeflection(F, E, I, a, x):
-    if x <= a:
-        return -((F * x**2)/(6 * E * I)) * (3 * a - x)
-    else:
-        return -((F * a**2)/(6 * E * I)) * (3 * x - a)
-
-
-def maxDeflection(F, L, E, I, a):
-    return (((F * a**2) / (6 * E * I)) * (3 * L - a))
-
-
-def calcShear(F, a, x):
-    if x <= a:
-        return F
-    else:
-        return F * 0  # Maintains intended units
-
-
-def calcMoment(F, a, x):
-        if x <= a:
-            return -(F * (a - x))
-        else:
-            return F * a * 0  # Maintains intended units
+def voltage_at_load(input_voltage, resistance, current):
+    """
+    Calculate the voltage at the load after the voltage drop across the wire.
+    
+    :param input_voltage: Voltage at the source (in volts)
+    :param resistance: Total resistance of the wire (in ohms)
+    :param current: Current flowing through the wire (in amperes)
+    
+    :return: Voltage at the load (in volts)
+    """
+    # Calculate the voltage drop (Ohm's Law: V_drop = I * R)
+    voltage_drop = current * resistance
+    
+    # Calculate the voltage at the load
+    voltage_at_load = input_voltage - voltage_drop
+    
+    return voltage_at_load
 
 
 def return_max(_list):
@@ -77,35 +64,22 @@ def run():
     st.markdown('### Input')
 
     # Section Header for input Data
+    st.markdown('##### Source Inputs')
+    def_sourceDC = units.load('24 volts')
+    source_voltage = units.input('Source DC', def_sourceDC, minor=False)
+
     st.markdown('##### Load Inputs')
-
-    # Numbers can be requested from the user through the 'units.input()' function
-    # You can pre-define the default value, as is done in this first case
-    # 'units.load()' is utlizied to pre-define a magnitude and unit
-    # many common units are available to be interpreted in string format
-    def_load = units.load('1200 lbf')
-
-    # Then 'units.input()' creates the input field in the website
-    # It handles displaying the title, input box, unit selector drop-down and unit conversions
-    # The (minor) field is optional and defaults to False, this determines if
-    # inches or feet should be selected, for example.
-    load = units.input('Applied Load', def_load, minor=False)
-
-    # You can also simply load the default unit in the same step
-    distance = units.input('Distance to Load from Fixed end', '15 feet')
-
-    # Another option to get data from the user is in tabular form, if you need multiple values of the same type.
-    # For this, you can use the 'units.table_input()' function. An example string is shown below.
-    # Be sure the variable declaration (left of the equals), has the same length as the lists provided for the function label, defaul, and minor inputs.
-    # l, v, s = units.table_input(('Conduit Length', 'Voltage Class', 'Speed'), ('1.0 ft', '1.0 V', '12.0 mph'))
-    # st.write(l)
-    # st.write(v, s)
-
+    def_loadAmps = units.load('2 A')
+    load_current = units.input('Current Draw', def_loadAmps, minor=False)
+    
     # Section Header for input Data
-    st.markdown('##### Beam Inputs')
-    length = units.input('Total length of beam', '25 ft')
-    modulus = units.input("Young's Modulus", '27_500_000 lbf/in**2', minor=True)
-    inertia = units.input('Second Moment of Area', '209 in**4', True)
+    st.markdown('##### Wire Inputs')
+    wire_length = units.input('Length of wire', '100 ft')
+    wire_resistivity = units.input('Electrical resistance', '1.62 ohms_per_1000ft')
+    resistance_norm = units.load('1000 ft')
+    #total_resistance = 2 * wire_length * wire_resistivity / resistance_norm
+    total_resistance = units.input('Total Resistance', '2 ohm')
+    st.caption(f'Wire Resistance = {units.unitdisplay(total_resistance, minor=False)}') 
 
     # Section Header for Results
     st.markdown('### Results')
@@ -114,42 +88,40 @@ def run():
     # Visit 'https://www.upyesp.org/posts/makrdown-vscode-math-notation/' for information
     st.markdown(markdown())
 
-    # For this example, we want to plot the beam properties over its length
-    # So we use the numpy (np) 'linspace' command to create a range of values
-    x = np.linspace((0*length).to_base_units(), length.to_base_units(), num=100, endpoint=True)
-
     # We can provide a visual break in the data through a hard line, created by 'st.markdown('---')'
     st.markdown('---')
-
+    
+    load_voltage = voltage_at_load(source_voltage, total_resistance, load_current)
+    st.caption(f'Voltage at load = {units.unitdisplay(load_voltage, minor=False)}')
     # The syntax [do_something_to x for x in xlist], iterates over the xlist,
     # pulling out a single value assigned as x, and does something to it
     # if called for "beam.deflection('12ft')" then we would get a single result for the deflection at '12ft'
     # by iterating over the full list of 'x', assigned above, we can get a list of corresponding values
     # Notice here that we have to be careful not to assign our variable name the same as our function name.
-    deflection = [calcDeflection(F=load, E=modulus, I=inertia, a=distance, x=_x).to_base_units() for _x in x]
+    #deflection = [calcDeflection(F=load, E=modulus, I=inertia, a=distance, x=_x).to_base_units() for _x in x]
 
     # Since we have two lists of equal length, x and deflection, we plot these by using the 'plot()' function
     # The plot size, unit display, interactivity, and tooltip is handled within this function
     # If you compare the "SingleCalc" to the "MultiCalc", you will notice that by using the Class object, we only need
     # to define the input variables once. Since the object stores the data, we then can simply just call out the methods we want to utilize.
     # However, in this example we need to provide the variables each time.
-    plot('Beam Deflection', 'x', 'y', x, deflection, False, True)
-    maxd = maxDeflection(F=load, L=length, E=modulus, I=inertia, a=distance)
+    #plot('Beam Deflection', 'x', 'y', x, deflection, False, True)
+    #maxd = maxDeflection(F=load, L=length, E=modulus, I=inertia, a=distance)
 
     # We can utilize the 'caption' function from streamlit (st) to display information
-    st.caption(f'Maximum Deflection = {units.unitdisplay(maxd, minor=True)}')
+    #st.caption(f'Maximum Deflection = {units.unitdisplay(maxd, minor=True)}')
 
-    st.markdown('---')
-    shear = [calcShear(F=load, a=distance, x=_x).to_base_units() for _x in x]
-    plot('Beam Shear', 'x', 'y', x, shear, False, True)
-    maxshear = return_max(shear)
-    st.caption(f'Maximum Shear = {units.unitdisplay(maxshear, minor=True)}')
+    #st.markdown('---')
+    #shear = [calcShear(F=load, a=distance, x=_x).to_base_units() for _x in x]
+    #plot('Beam Shear', 'x', 'y', x, shear, False, True)
+    #maxshear = return_max(shear)
+    #st.caption(f'Maximum Shear = {units.unitdisplay(maxshear, minor=True)}')
 
-    st.markdown('---')
-    moment = [calcMoment(F=load, a=distance, x=_x).to_base_units() for _x in x]
-    plot('Beam Moment', 'x', 'y', x, moment, False, False)
-    maxmoment = return_max(moment)
-    st.caption(f'Maximum Moment = {units.unitdisplay(maxmoment)}')
+    #st.markdown('---')
+    #moment = [calcMoment(F=load, a=distance, x=_x).to_base_units() for _x in x]
+    #plot('Beam Moment', 'x', 'y', x, moment, False, False)
+    #maxmoment = return_max(moment)
+    #st.caption(f'Maximum Moment = {units.unitdisplay(maxmoment)}')
 
 
 # -----------------------------------------------------------------------------------------------------------

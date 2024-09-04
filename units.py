@@ -16,6 +16,8 @@ gravity = ureg('standard_gravity')
 pi = ureg('pi')
 e = ureg('eulers_number')
 
+ureg.define("ohms_per_ft = ohm / foot")
+ureg.define("ohms_per_1000ft = 1000 * ohms_per_ft")
 
 def unit_round(val, roundval, units):
     return round((val.to(units)/roundval.to(units)),0)*roundval
