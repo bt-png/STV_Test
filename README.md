@@ -6,9 +6,10 @@ Two ways to develop depending on your local computer access (WebBased or Local):
 
 ## WebBased Development
 Create personal user account for GitHub and go to the GitHub Codespaces website (https://github.com/codespaces).
-Create a new codespace and utilize the repository ```bt-png/STV_Test```
+Create a fork on the repository ```bt-png/STV_Test```
+Create a new codespace on the new repository
 A new browser window should be launched with a python terminal to continue.
-* Once finished developing and you save the files locally, remember to go back to the codespaces website and delete the created space.
+* Remember to go back to the codespaces website and delete the created space.
 
 ## Local Development
 Utilize Visual Code, PyCharm, or other IDE for Python 3.  
