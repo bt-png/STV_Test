@@ -31,7 +31,7 @@ def markdown():
     
     The formula for voltage at the load is:
 
-    $V_{load} = V_{input} - I_{wire} \cdot R_{wire}$
+    $V_{load} = V_{source} - I_{wire} \cdot R_{wire}$
     """
     return md
 
