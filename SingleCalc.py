@@ -25,9 +25,13 @@ from plot import plot  # plot.py: No changes to plot.py will be accepted, unless
 # In the ```MultiCalc``` example, these would be contained within their associated class objects within the formulas module.
 def markdown():
     md = """
+    The formula for wire resistance is:
+
+    $R_{wire} = 2 \cdot L_{wire} \cdot R_{length}$
+    
     The formula for voltage at the load is:
 
-    $$V_{\t{load}} = V_{\t{input}} - I \cdot R$$
+    $V_{load} = V_{input} - I_{wire} \cdot R_{wire}$
     """
     return md
 
@@ -74,12 +78,10 @@ def run():
     
     # Section Header for input Data
     st.markdown('##### Wire Inputs')
-    wire_length = units.input('Length of wire', '100 ft')
-    wire_resistivity = units.input('Electrical resistance', '1.62 ohms_per_1000ft')
-    resistance_norm = units.load('1000 ft')
-    #total_resistance = 2 * wire_length * wire_resistivity / resistance_norm
-    total_resistance = units.input('Total Resistance', '2 ohm')
-    st.caption(f'Wire Resistance = {units.unitdisplay(total_resistance, minor=False)}') 
+    wire_length = units.input('Length of wire', '300 ft')
+    wire_resistivity = units.input('Resistance per length', '1.62 ohm/kft')
+    total_resistance = 2 * wire_length * wire_resistivity
+    #st.caption(f'Wire Resistance = {units.unitdisplay(total_resistance, minor=False)}') 
 
     # Section Header for Results
     st.markdown('### Results')
@@ -92,7 +94,7 @@ def run():
     st.markdown('---')
     
     load_voltage = voltage_at_load(source_voltage, total_resistance, load_current)
-    st.caption(f'Voltage at load = {units.unitdisplay(load_voltage, minor=False)}')
+    st.text(f'Voltage at load = {units.unitdisplay(load_voltage, minor=False)}')
     # The syntax [do_something_to x for x in xlist], iterates over the xlist,
     # pulling out a single value assigned as x, and does something to it
     # if called for "beam.deflection('12ft')" then we would get a single result for the deflection at '12ft'
