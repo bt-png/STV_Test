@@ -4,7 +4,7 @@
 # Use command line 'pip install -r requirements.txt' to install into your virtual environment
 import streamlit as st
 import numpy as np
-
+import pandas as pd
 
 # Import local *.py files as reference modules to be utilized in the calculation
 import units  # units.py: No changes to units.py will be accepted, unless use case is fully justified.
@@ -54,6 +54,24 @@ def voltage_at_load(input_voltage, resistance, current):
     
     return voltage_at_load
 
+def parse_csv(file_path):
+    """
+    Parses a CSV file containing wire resistance data into a pandas DataFrame.
+    Assumes the first line of the CSV contains column headers.
+    
+    :param file_path: Path to the CSV file (default is 'wire_resistance.csv')
+    :return: A pandas DataFrame with the inferred column names from the file
+    """
+    try:
+        # Read the CSV file, letting pandas infer the column names from the first row
+        df = pd.read_csv(file_path)
+        return df
+    except FileNotFoundError:
+        print(f"Error: The file '{file_path}' was not found.")
+    except pd.errors.EmptyDataError:
+        print("Error: The file is empty.")
+    except pd.errors.ParserError:
+        print("Error: There was an issue parsing the file.")
 
 def return_max(_list):
     _min = min(_list)
@@ -78,10 +96,26 @@ def run():
     
     # Section Header for input Data
     st.markdown('##### Wire Inputs')
-    wire_length = units.input('Length of wire', '300 ft')
-    wire_resistivity = units.input('Resistance per length', '1.62 ohm/kft')
-    total_resistance = 2 * wire_length * wire_resistivity
-    #st.caption(f'Wire Resistance = {units.unitdisplay(total_resistance, minor=False)}') 
+    
+    # Load the wire characteristics into a dataframe
+    wire_df = parse_csv('wire_resistance.csv')
+
+    # Create a dropdown (selectbox) using Streamlit
+    selected_awg = st.selectbox(
+        'Select the wire gauge size:', 
+        wire_df['awg'],
+        index=10
+    )
+
+    # Filter the DataFrame to get the row where 'awg' equals the selected_awg
+    selected_row = wire_df[wire_df['awg'] == selected_awg]
+    # Extract the 'r_25c' value for the selected AWG
+    wire_resistivity = units.load(str(selected_row['r_25c'].values[0]) + ' ohm/kft')
+
+    wire_length = units.input('Length of wire', '300 ft', minor=False)
+    
+    total_resistance = 2 * wire_length * wire_resistivity / units.load('1000 ft/kft')
+    st.caption(f'Wire Resistance = {units.unitdisplay(total_resistance, minor=False)}') 
 
     # Section Header for Results
     st.markdown('### Results')
