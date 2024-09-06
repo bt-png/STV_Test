@@ -100,6 +100,31 @@ def run():
     # Load the wire characteristics into a dataframe
     wire_df = parse_csv('wire_resistance.csv')
 
+    # Enable the download/upload of custom wire characteristics
+    with st.expander('Upload Wire Data', expanded = False):
+        col1, col2 = st.columns([4, 1])
+        with col2:
+            blankelement = st.container(height=20, border=False)
+            st.download_button(
+                label='download sample csv',
+                data=wire_df.to_csv(index=False).encode('utf-8'),
+                file_name='sample_wire_resistance.csv',
+                mime='textcsv'
+            )
+        with col1:
+            upload_file = st.file_uploader(
+                'Upload a properly formatted csv file containing wire properties',
+                type={'csv'},
+                accept_multiple_files=False)
+            if upload_file is not None:
+                upload_df = parse_csv(upload_file)
+                vals = [oheader in upload_df.columns for oheader in wire_df.columns]
+                if all(vals) == False:
+                    st.warning('The headers need to remain from the sample download. Try again.')
+                else:
+                    st.success('Wire Table updated!')
+                    wire_df = upload_df
+
     # Create a dropdown (selectbox) using Streamlit
     selected_awg = st.selectbox(
         'Select the wire gauge size:', 
@@ -128,7 +153,8 @@ def run():
     st.markdown('---')
     
     load_voltage = voltage_at_load(source_voltage, total_resistance, load_current)
-    st.text(f'Voltage at load = {units.unitdisplay(load_voltage, minor=False)}')
+    # st.text(f'Voltage at load = {units.unitdisplay(load_voltage, minor=False)}')
+    st.write('$V_{load}= $'+ f'{units.unitdisplay(load_voltage, minor=False)}')
     # The syntax [do_something_to x for x in xlist], iterates over the xlist,
     # pulling out a single value assigned as x, and does something to it
     # if called for "beam.deflection('12ft')" then we would get a single result for the deflection at '12ft'
