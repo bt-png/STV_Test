@@ -101,9 +101,9 @@ def run():
     wire_df = parse_csv('wire_resistance.csv')
 
     # Enable the downloadupload of custom wire characteristics
-    with st.expander('Upload Wire Data', expanded = False)
+    with st.expander('Upload Wire Data', expanded = False):
         col1, col2 = st.columns([4, 1])
-        with col2
+        with col2:
             blankelement = st.container(height=20, border=False)
             st.download_button(
                 label='download sample csv',
@@ -111,17 +111,17 @@ def run():
                 file_name='sample_wire_resistance.csv',
                 mime='textcsv'
             )
-        with col1
+        with col1:
             upload_file = st.file_uploader(
                 'Upload a properly formatted csv file containing wire properties',
                 type={'csv'},
                 accept_multiple_files=False)
-            if upload_file is not None
+            if upload_file is not None:
                 upload_df = parse_csv(upload_file)
                 vals = [oheader in upload_df.columns for oheader in wire_df.columns]
-                if all(vals) == False
+                if all(vals) == False:
                     st.warning('The headers need to remain from the sample download. Try again.')
-                else
+                else:
                     st.success('Wire Table updated!')
                     wire_df = upload_df
 
